@@ -1,12 +1,10 @@
 package kz.ablazim.voicerecordingapp.voicerecordings.presentation
 
 import android.Manifest
-import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Bundle
-import android.os.Environment
 import android.view.View
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -14,15 +12,17 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import kz.ablazim.voicerecordingapp.R
 import kz.ablazim.voicerecordingapp.databinding.FragmentVoiceRecordingsBinding
-import java.io.File
+import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 private const val MICROPHONE_PERMISSION_CODE = 200
 
 class VoiceRecordingsFragment : Fragment(R.layout.fragment_voice_recordings) {
 
     private lateinit var binding: FragmentVoiceRecordingsBinding
-    private var mediaRecorder: MediaRecorder? = null
-    private var mediaPlayer: MediaPlayer? = null
+    private val viewModel: VoiceRecordingsViewModel by viewModel { parametersOf(context) }
+    private var mediaRecorder: MediaRecorder? = MediaRecorder()
+    private var mediaPlayer: MediaPlayer? = MediaPlayer()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -34,42 +34,41 @@ class VoiceRecordingsFragment : Fragment(R.layout.fragment_voice_recordings) {
 
         with(binding) {
             recordButton.setOnClickListener {
-                try {
-                    mediaRecorder = MediaRecorder()
-                    mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-                    mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-                    mediaRecorder?.setOutputFile(getRecordingFilePath())
-                    mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-                    mediaRecorder?.prepare()
-                    mediaRecorder?.start()
-
-                    Toast.makeText(context, "Recording is started", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                viewModel.onRecordButtonClicked(mediaRecorder)
             }
 
             stopButton.setOnClickListener {
-                mediaRecorder?.stop()
-                mediaRecorder?.release()
-                mediaRecorder = null
-
-                Toast.makeText(context, "Recording is stopped", Toast.LENGTH_SHORT).show()
+                viewModel.onStopButtonClicked(mediaRecorder)
             }
 
             playButton.setOnClickListener {
-                try {
-                    mediaPlayer = MediaPlayer()
-                    mediaPlayer?.setDataSource(getRecordingFilePath())
-                    mediaPlayer?.prepare()
-                    mediaPlayer?.start()
-
-                    Toast.makeText(context, "Recording is playing", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                viewModel.onPlayButtonClicked(mediaPlayer)
             }
         }
+
+        viewModel.actions.observe(viewLifecycleOwner) { action ->
+            when (action) {
+                is VoiceRecordingsAction.ShowRecordingStartedToast -> Toast.makeText(
+                    context,
+                    "Recording is started",
+                    Toast.LENGTH_SHORT
+                ).show()
+                is VoiceRecordingsAction.ShowRecordingStoppedToast -> {
+                    mediaRecorder = null
+                    Toast.makeText(context, "Recording is stopped", Toast.LENGTH_SHORT).show()
+                }
+                is VoiceRecordingsAction.ShowPlayRecordingToast -> Toast.makeText(
+                    context,
+                    "Recording is playing",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaPlayer = null
     }
 
     private fun isMicrophonePresent(): Boolean {
@@ -90,12 +89,5 @@ class VoiceRecordingsFragment : Fragment(R.layout.fragment_voice_recordings) {
                 )
             }
         }
-    }
-
-    private fun getRecordingFilePath(): String {
-        val contextWrapper = ContextWrapper(context)
-        val musicDirectory = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-        val file = File(musicDirectory, "testRecordingFile" + ".mp3")
-        return file.path
     }
 }

@@ -1,4 +1,4 @@
-package com.ablazim.oneaviationandroid.base
+package kz.ablazim.voicerecordingapp.base
 
 import androidx.annotation.MainThread
 import androidx.lifecycle.LifecycleOwner

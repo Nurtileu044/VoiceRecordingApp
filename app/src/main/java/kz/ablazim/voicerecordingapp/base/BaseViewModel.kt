@@ -1,11 +1,9 @@
-package com.ablazim.oneaviationandroid.base
+package kz.ablazim.voicerecordingapp.base
 
-/*
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ablazim.oneaviationandroid.utlis.Logger
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +18,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kz.ablazim.voicerecordingapp.utils.Logger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.CoroutineContext
 
@@ -133,4 +132,4 @@ data class BaseViewModelDependency(
     val context: Context,
     val logger: Logger,
     val errorHandler: ErrorHandler
-)*/
+)
